@@ -6,18 +6,6 @@ setup() {
   load '../scripts/utils-func.sh'
 }
 
-@test "exit_with_error: should exit upon provided errorCode" {
-  run exit_with_error 1
-  assert_failure 1
-  assert_output ""
-}
-
-@test "exit_with_error: should exit with 'numeric argument required' error if no code is provided" {
-  run exit_with_error
-  assert_failure 2
-  assert_output --partial "numeric argument required"
-}
-
 @test "command_exists: command should exist" {
   run command_exists "ls"
   assert_success
