@@ -21,17 +21,6 @@ source "$script_dir/logging-func.sh"
 SCRIPT_NAME="utils-func.sh" # Script name
 SCRIPT_VERSION="1.0.0"      # Script version
 
-# Exists with a given error
-# Parameters:
-#   $1 -  error code to exit the script with
-# Returns nothing.
-exit_with_error() {
-  local errorCode
-  errorCode="$1"
-  shift
-  exit "$errorCode"
-}
-
 # Checks whether a given command exists.
 # Parameters:
 #   $1 -  command to test for
@@ -45,7 +34,7 @@ command_exists() {
     log_error "✖ FAILED"
     log_newline
     log_error "'$command_to_check' was not found. Aborting generation!"
-    exit_with_error 2
+    exit 2
   else
     log_success " ✔ DONE"
     log_newline

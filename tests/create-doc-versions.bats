@@ -3,7 +3,7 @@ setup() {
   bats_require_minimum_version 1.10.0
   bats_load_library bats-support
   bats_load_library bats-assert
-  load '../scripts/create-docs-versions.sh'
+  load '../scripts/create-doc-versions.sh'
 
   versions=("develop" "master" "v1.0.0" "v1.0.2" "v2.0.1" "v1.0rc3" "feature-some-stuff")
   versions_json='[
@@ -52,7 +52,8 @@ setup() {
   result=$(filter_semantic_versions "${versions[@]}")
   expectedArray=("v1.0.0" "v1.0.2" "v2.0.1")
   expected=$(printf "%s\n" "${expectedArray[@]}")
-  assert_equal "${result[@]}" "${expected[@]}"
+  assert_equal "${#result[@]}" "${#result[@]}"
+  assert_equal "${result[*]}" "${expected[*]}"
 }
 
 @test "determine_hint: should find 'deprecated' hint" {
