@@ -11,13 +11,18 @@
 #   - run this script
 #
 # Exit codes:
-#   0 - Script exited successfully (without an error).
-#   1 - Script exited, because neither a `./library.json` nor a `./platformio.ini` was found.
-#   2 - Script exited, because a tool is not installed or available (see [Prerequisites](#prerequisites)).
-#   3 - Script exited, because the source file (`./library.json` or `./platformio.ini`) does not exist.
-#   4 - Script exited, because the source file does not contain any relevant metadata fields.
-#   5 - Script exited, because values could not be retrieved from either `./library.json` or `./platformio.ini`.
-#   6 - Script exited, because it failed to successfully execute `doxygen`.
+#   0   - Script exited successfully (without an error).
+#   1   - Script exited, because neither a `./library.json` nor a `./platformio.ini` was found.
+#   2   - Script exited, because a tool is not installed or available (see [Prerequisites](#prerequisites)).
+#   3   - Script exited, because the source file (`./library.json` or `./platformio.ini`) does not exist.
+#   4   - Script exited, because the source file does not contain any relevant metadata fields.
+#   5   - Script exited, because values could not be retrieved from either `./library.json` or `./platformio.ini`.
+#   6   - Script exited, because an expected template file does not exist.
+#   7   - Script exited, because it failed to successfully execute `doxygen`.
+#   8   - Script exited, because it failed to copy misc files.
+#   9   - Script exited, because it failed to delete templated files.
+#   10  - Script exited, because it failed to delete an existing vx.x.x directory.
+#   11  - Script exited, because it failed to move generated html directory into the public directory.
 
 script_dir=$(dirname "${BASH_SOURCE[0]}")
 source "$script_dir/logging-func.sh"
@@ -31,7 +36,7 @@ PLATFORMIO_INI_SOURCE="platformio.ini" # another source for metadata
 
 # Definitions
 SCRIPT_NAME="create-docs.sh"                       # Script name
-SCRIPT_VERSION="1.0.0"                             # Script version
+SCRIPT_VERSION="1.0.1"                             # Script version
 DOXY_CONFIG="./doxy-config"                        # configuration folder containing various Doxygen-related files
 DOXY_FILE="Doxyfile"                               # Doxygen configuration custom_file
 DOXY_HEADER_TEMPLATE="doxy-header-template.html"   # Doxygen HTML header template
@@ -41,7 +46,7 @@ DOXY_FOOTER="doxy-footer.html"                     # Doxygen HTML footer
 DOXY_STYLESHEET_TEMPLATE="doxy-style-template.css" # Doxygen CSS stylesheet template
 DOXY_STYLESHEET="doxy-style.css"                   # Doxygen CSS stylesheet
 MISC_SOURCE="./doxy-misc"                          # folder containing additional files for documentation
-MISC_TARGET="./public/html"                        # actual target folder
+MISC_TARGET="$GEN_TARGET/html"                     # actual target folder
 
 declare -Ag metadata_mappings
 declare -ag metadata_values
@@ -165,6 +170,21 @@ preprocess_templates() {
   log_info "Preprocess template HTML and CSS files..."
   eval "${metadata_values[*]}"
 
+  # Check if the template files are present and exit if not
+  local template_file
+  for template_file in \
+    "$DOXY_CONFIG/$DOXY_HEADER_TEMPLATE" \
+    "$DOXY_CONFIG/$DOXY_FOOTER_TEMPLATE" \
+    "$DOXY_CONFIG/$DOXY_STYLESHEET_TEMPLATE"; do
+    if [[ ! -e $template_file ]]; then
+      log_error " ✖ FAILED"
+      log_newline
+      log_error "Template file '$template_file' does not exist!"
+      log_newline
+      exit 6
+    fi
+  done
+
   # Extract variable names from metadata_values (just the PRJ_* part), prepend each with a '$' and join using ','
   variables_to_substitute=""
   for metadata_value in "${metadata_values[@]}"; do
@@ -202,7 +222,7 @@ generate_docs() {
     log_newline
     log_error "$doxygen_run"
     log_newline
-    exit 6
+    exit 7
   fi
 }
 
@@ -212,19 +232,38 @@ copy_misc_files() {
   log_info "Copying '"
   log_hightlight "$MISC_SOURCE/*"
   log_info "' to '"
-  log_hightlight "$GEN_TARGET/"
+  log_hightlight "$MISC_TARGET"
   log_info "'..."
-  cp "$MISC_SOURCE/"* "$MISC_TARGET"
-  log_success " ✔ DONE"
-  log_newline
+
+  if cp "$MISC_SOURCE/"* "$MISC_TARGET"; then
+    log_success " ✔ DONE"
+    log_newline
+  else
+    log_error " ✖ FAILED"
+    log_newline
+    log_error "Failed to copy misc files!"
+    log_newline
+    exit 8
+  fi
 }
 
 # Remove templated files after the docs have been generated
-delete_generated_templates() {
+delete_generated_template_files() {
   log_info "Deleting templated files..."
-  rm -f "$DOXY_CONFIG/$DOXY_HEADER"
-  rm -f "$DOXY_CONFIG/$DOXY_FOOTER"
-  rm -f "$DOXY_CONFIG/$DOXY_STYLESHEET"
+
+  for generated_file in \
+    "$DOXY_CONFIG/$DOXY_HEADER" \
+    "$DOXY_CONFIG/$DOXY_FOOTER" \
+    "$DOXY_CONFIG/$DOXY_STYLESHEET"; do
+    if ! rm -rf "$generated_file"; then
+      log_error " ✖ FAILED"
+      log_newline
+      log_error "Could not delete generated file '$generated_file'!"
+      log_newline
+      exit 9
+    fi
+  done
+
   log_success " ✔ DONE"
   log_newline
 }
@@ -236,10 +275,20 @@ rename_html_directory() {
   log_info "' to '"
   log_hightlight "$GEN_TARGET/v$PRJ_VERSION/"
   log_info "'..."
-  if [ -d "$GEN_TARGET/v$PRJ_VERSION" ]; then
-    rm -rf "$GEN_TARGET/v$PRJ_VERSION"
+  if ! test -d "$GEN_TARGET/v$PRJ_VERSION" || ! rm -rf "$GEN_TARGET/v$PRJ_VERSION"; then
+    log_error " ✖ FAILED"
+    log_newline
+    log_error "Could not delete '$GEN_TARGET/v$PRJ_VERSION'!"
+    log_newline
+    exit 10
   fi
-  mv "$GEN_TARGET/html" "$GEN_TARGET/v$PRJ_VERSION"
+  if ! mv "$GEN_TARGET/html" "$GEN_TARGET/v$PRJ_VERSION" >/dev/null; then
+    log_error " ✖ FAILED"
+    log_newline
+    log_error "Could not move '$GEN_TARGET/html' to '$GEN_TARGET/v$PRJ_VERSION'!"
+    log_newline
+    exit 11
+  fi
   log_success " ✔ DONE"
   log_newline
 }
@@ -264,7 +313,7 @@ main() {
 
   copy_misc_files
 
-  delete_generated_templates
+  delete_generated_template_files
 
   rename_html_directory
 }
