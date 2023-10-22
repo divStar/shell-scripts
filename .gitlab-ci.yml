@@ -7,7 +7,7 @@ bats_tests:
     name: bats/bats:latest
     entrypoint: [""]
   script:
-    - bats --formatter junit tests > test-results.xml
+    - bats --formatter junit /builds/develop/shell-scripts/tests
   artifacts:
     when: always
     paths:
