@@ -1,15 +1,19 @@
 stages:
   - test
 
+variables:
+  TEST_RESULTS_FILE: test-results.xml
+
 bats_tests:
   stage: test
   image:
     name: bats/bats:latest
     entrypoint: [""]
   script:
-    - printenv
-    - bats --formatter junit /builds/develop/shell-scripts/tests
+    - bats --formatter junit "$PWD/tests" > $TEST_RESULTS_FILE
   artifacts:
     when: always
     paths:
-      - test-results.yml
+      - $TEST_RESULTS_FILE
+    reports:
+      junit: $TEST_RESULTS_FILE
