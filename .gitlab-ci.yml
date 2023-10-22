@@ -1,0 +1,14 @@
+stages:
+  - test
+
+bats_tests:
+  stage: test
+  image:
+    name: bats/bats:latest
+    entrypoint: [""]
+  script:
+    - bats --formatter junit tests > test-results.xml
+  artifacts:
+    when: always
+    paths:
+      - test-results.yml
