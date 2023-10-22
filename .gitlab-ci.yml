@@ -11,11 +11,11 @@ bats_tests:
     entrypoint: [""]
   script:
     - set +o pipefail
-    - bats --formatter junit "$PWD/tests" > $TEST_RESULTS_FILE
-    - echo $?
+    - bats --formatter junit "$PWD/tests" > $PWD/$TEST_RESULTS_FILE
+    - echo "Exit code is $?"
   artifacts:
     when: always
     paths:
-      - $TEST_RESULTS_FILE
+      - $PWD/$TEST_RESULTS_FILE
     reports:
-      junit: $TEST_RESULTS_FILE
+      junit: $PWD/$TEST_RESULTS_FILE
