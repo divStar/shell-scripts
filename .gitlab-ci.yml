@@ -10,7 +10,9 @@ bats_tests:
     name: bats/bats:latest
     entrypoint: [""]
   script:
+    - set +o pipefail
     - bats --formatter junit "$PWD/tests" > $TEST_RESULTS_FILE
+    - echo $?
   artifacts:
     when: always
     paths:
