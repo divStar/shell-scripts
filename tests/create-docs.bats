@@ -1,5 +1,11 @@
 #!/usr/bin/bats
 # Mock doxygen command
+envsubst() {
+  return 0
+}
+yq() {
+  return 0
+}
 doxygen() {
   if [[ $1 == "success_config/doxyfile" ]] || [[ $1 == "./Doxyfile" ]]; then
     # Simulate success
@@ -96,6 +102,15 @@ setup() {
 }
 
 @test "get_metadata: should retrieve metadata from 'library.json' successfully" {
+  yq() {
+    echo "export PRJ_AUTHOR=\"Igor Voronin\""
+    echo "export PRJ_LOGO=\"./some-logo.png\""
+    echo "export PRJ_VERSION=\"1.0.1\""
+    echo "export PRJ_NAME=\"Example Application\""
+    echo "export PRJ_DESCRIPTION=\"A simple test application\""
+    return 0
+  }
+
   echo '{
     "name": "Example Application",
     "keywords": "test, demo",
@@ -131,6 +146,7 @@ setup() {
     .[] |
     select(.value | length > 0) |
     "export " + .key + "=\"" + .value + "\""'
+
   declare -a expected_metadata_values
   expected_metadata_values[0]="export PRJ_AUTHOR=\"Igor Voronin\""
   expected_metadata_values[1]="export PRJ_LOGO=\"./some-logo.png\""
@@ -147,6 +163,15 @@ setup() {
 }
 
 @test "get_metadata: should retrieve metadata from 'platformio.ini' successfully" {
+  yq() {
+    echo "export PRJ_AUTHOR=\"Igor Voronin\""
+    echo "export PRJ_LOGO=\"./some-logo.png\""
+    echo "export PRJ_VERSION=\"1.0.1\""
+    echo "export PRJ_NAME=\"Example Application\""
+    echo "export PRJ_DESCRIPTION=\"A simple test application\""
+    return 0
+  }
+
   echo '[platformio]
 name = Example Application
 description = A simple test application
@@ -211,6 +236,20 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
 
 @test "preprocess_templates: should preprocess templates successfully" {
   # Given
+  # Mock `envsubst`
+  envsubst() {
+    local content
+    content=$(cat)
+    if [[ $content == "Header"* ]]; then
+      echo "$expected_header_contents"
+    elif [[ $content == "Footer"* ]]; then
+      echo "$expected_footer_contents"
+    elif [[ $content == "Stylesheet"* ]]; then
+      echo "$expected_stylesheet_contents"
+    fi
+    return 0
+  }
+
   # Prepare `create-docs.sh` script variables
   metadata_values[0]="export SOME_VAR=\"Some variable\""
   metadata_values[1]="export SOME_OTHER_VAR=\"Some other variable\""
@@ -274,6 +313,19 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
 
 @test "preprocess_templates: should process templates successfully even with empty metadata_values" {
   # Given
+  # Mock `envsubst`
+  envsubst() {
+    local content
+    content=$(cat)
+    if [[ $content == "Header"* ]]; then
+      echo "$expected_header_contents"
+    elif [[ $content == "Footer"* ]]; then
+      echo "$expected_footer_contents"
+    elif [[ $content == "Stylesheet"* ]]; then
+      echo "$expected_stylesheet_contents"
+    fi
+    return 0
+  }
   # Prepare `create-docs.sh` script variables
   metadata_values=() # Empty array
 
@@ -580,8 +632,6 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
     return 1
   }
 
-
-
   # Run
   run rename_html_directory
 
@@ -619,6 +669,14 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
     return 0
   }
   mv() {
+    return 0
+  }
+  yq() {
+    echo "export PRJ_AUTHOR=\"Igor Voronin\""
+    echo "export PRJ_LOGO=\"./some-logo.png\""
+    echo "export PRJ_VERSION=\"1.0.1\""
+    echo "export PRJ_NAME=\"Example Application\""
+    echo "export PRJ_DESCRIPTION=\"A simple test application\""
     return 0
   }
   # Files

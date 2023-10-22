@@ -1,4 +1,8 @@
 #!/usr/bin/bats
+yq() {
+  return 0
+}
+
 setup() {
   bats_require_minimum_version 1.10.0
   bats_load_library bats-support
@@ -81,11 +85,27 @@ setup() {
 }
 
 @test "construct_json: should construct proper versions_json" {
-  local result
-  local expected
-  result=$(construct_json "${versions[4]}" "${versions[@]}")
-  expected=$(echo "$versions_json" | yq eval -o=json -)
-  assert_equal "$result" "$expected"
+  # Given
+  # Mock
+  yq() {
+    echo $(( $(cat "$yq_counter_file") + 1 )) >"$yq_counter_file"
+    echo "$(cat) $version_name"
+    return 0
+  }
+
+  local yq_counter_file
+  yq_counter_file=$(mktemp)
+  echo 0 >"$yq_counter_file"
+
+  # When
+  run construct_json "${versions[4]}" "${versions[@]}"
+
+  # Then
+  assert_equal "$(cat "$yq_counter_file")" "${#versions[@]}"
+  assert_output "[] ${versions[*]}"
+
+  # Cleanup
+  rm "$yq_counter_file"
 }
 
 @test "handle_arguments: should handle --public-directory=... properly" {

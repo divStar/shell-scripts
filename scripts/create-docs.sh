@@ -98,7 +98,6 @@ build_yq_filter() {
   log_info " and building '"
   log_highlight "yq"
   log_info "' filter..."
-  log_newline
   if [[ ${#metadata_mappings[@]} -gt 0 ]]; then
     yq_filter='{'
     for metadata_mapping in "${!metadata_mappings[@]}"; do
