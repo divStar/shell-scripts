@@ -8,11 +8,9 @@ bats_tests:
   stage: test
   image:
     name: bats/bats:latest
-    entrypoint: [""]
+    entrypoint: [ "" ]
   script:
-    - set +o pipefail
-    - bats --formatter junit "$PWD/tests" > $PWD/$TEST_RESULTS_FILE
-    - echo "Exit code is $?"
+    - bats --formatter junit "$PWD/tests" > $TEST_RESULTS_FILE || (exit_code=$?; echo "Bats exit code is $exit_code"; exit $exit_code)
   artifacts:
     when: always
     paths:
