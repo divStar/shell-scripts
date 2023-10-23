@@ -10,7 +10,7 @@ bats_tests:
     name: bats/bats:latest
     entrypoint: [ "" ]
   script:
-    - bats --formatter junit "$PWD/tests" > $TEST_RESULTS_FILE || (exit_code=$?; echo "Bats exit code is $exit_code"; exit $exit_code)
+    - bats --formatter junit "$PWD/tests" > $TEST_RESULTS_FILE
   artifacts:
     when: always
     paths:
