@@ -51,37 +51,37 @@ setup() {
 }
 
 @test "filter_semantic_versions: should find only tags successfully" {
-  local -a result
-  local -a expected
-  result=$(filter_semantic_versions "${versions[@]}")
+  run filter_semantic_versions "${versions[@]}"
+
   expectedArray=("v1.0.0" "v1.0.2" "v2.0.1")
+  local -a expected
   expected=$(printf "%s\n" "${expectedArray[@]}")
-  assert_equal "${#result[@]}" "${#result[@]}"
-  assert_equal "${result[*]}" "${expected[*]}"
+
+  assert_output "${expected[@]}"
 }
 
 @test "determine_hint: should find 'deprecated' hint" {
-  local result
+  run determine_hint "${versions[2]}" "${versions[4]}"
+
   local expected
-  result=$(determine_hint "${versions[2]}" "${versions[4]}")
   expected="deprecated"
-  assert_equal "$result" "$expected"
+  assert_output "$expected"
 }
 
 @test "determine_hint: should find 'latest' hint" {
-  local result
+  run determine_hint "${versions[4]}" "${versions[4]}"
+
   local expected
-  result=$(determine_hint "${versions[4]}" "${versions[4]}")
   expected="latest"
-  assert_equal "$result" "$expected"
+  assert_output "$expected"
 }
 
 @test "determine_hint: should find 'beta' hint" {
-  local result
+  run determine_hint "${versions[0]}" "${versions[3]}"
+
   local expected
-  result=$(determine_hint "${versions[0]}" "${versions[3]}")
   expected="beta"
-  assert_equal "$result" "$expected"
+  assert_output "$expected"
 }
 
 @test "construct_json: should construct proper versions_json" {
@@ -120,7 +120,6 @@ setup() {
   assert_equal "$json_echo" "false"
 }
 
-# bats test_tags=focus
 @test "main: should create proper 'doc-versions.json'" {
   # Export versions so that they can be used inside the mock function
   export VERSIONS="${versions[*]}"

@@ -209,7 +209,7 @@ generate_docs() {
   local doxygen_run
 
   log_info "Generating docs using '"
-  log_hightlight "doxygen $DOXY_CONFIG/$DOXY_FILE"
+  log_highlight "doxygen $DOXY_CONFIG/$DOXY_FILE"
   log_info "'..."
   if doxygen_run=$(doxygen "$DOXY_CONFIG/$DOXY_FILE" 2>&1 >/dev/null); then
     log_success " ✔ DONE"
@@ -229,9 +229,9 @@ generate_docs() {
 copy_misc_files() {
   # Copy misc directory contents to public directory
   log_info "Copying '"
-  log_hightlight "$MISC_SOURCE/*"
+  log_highlight "$MISC_SOURCE/*"
   log_info "' to '"
-  log_hightlight "$MISC_TARGET"
+  log_highlight "$MISC_TARGET"
   log_info "'..."
 
   if cp "$MISC_SOURCE/"* "$MISC_TARGET"; then
@@ -270,16 +270,20 @@ delete_generated_template_files() {
 # Rename html directory to version
 rename_html_directory() {
   log_info "Renaming '"
-  log_hightlight "$GEN_TARGET/html/"
+  log_highlight "$GEN_TARGET/html/"
   log_info "' to '"
-  log_hightlight "$GEN_TARGET/v$PRJ_VERSION/"
+  log_highlight "$GEN_TARGET/v$PRJ_VERSION/"
   log_info "'..."
-  if ! test -d "$GEN_TARGET/v$PRJ_VERSION" || ! rm -rf "$GEN_TARGET/v$PRJ_VERSION"; then
-    log_error " ✖ FAILED"
-    log_newline
-    log_error "Could not delete '$GEN_TARGET/v$PRJ_VERSION'!"
-    log_newline
-    exit 10
+  if test -e "$GEN_TARGET/v$PRJ_VERSION"; then
+    # Attempt to delete the file or directory
+    rm -rf "$GEN_TARGET/v$PRJ_VERSION" || {
+      # Log an error and exit if the deletion fails
+      log_error " ✖ FAILED"
+      log_newline
+      log_error "Could not delete '$GEN_TARGET/v$PRJ_VERSION'!"
+      log_newline
+      exit 10
+    }
   fi
   if ! mv "$GEN_TARGET/html" "$GEN_TARGET/v$PRJ_VERSION" >/dev/null; then
     log_error " ✖ FAILED"

@@ -28,7 +28,7 @@ cp() {
 
 # Mock log functions to output received text
 log_info() { printf "%s" "$1"; }
-log_hightlight() { printf "%s" "$1"; }
+log_highlight() { printf "%s" "$1"; }
 log_success() { printf "%s" "$1"; }
 log_error() { printf "%s" "$1"; }
 log_newline() { printf "\n"; }
@@ -591,6 +591,23 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
 @test "rename_html_directory: should rename the generated docs folder successfully" {
   # Set up
   test() {
+    return 1
+  }
+  mv() {
+    return 0
+  }
+
+  # Run
+  run rename_html_directory
+
+  # Assert
+  assert_success
+  assert_output "Renaming '$GEN_TARGET/html/' to '$GEN_TARGET/v$PRJ_VERSION/'... ✔ DONE"
+}
+
+@test "rename_html_directory: should rename the generated docs even though the directory exists" {
+  # Set up
+  test() {
     return 0
   }
   rm() {
@@ -605,22 +622,7 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
 
   # Assert
   assert_success
-  assert_output "Renaming '$GEN_TARGET/html/' to '$GEN_TARGET/v$PRJ_VERSION/'... ✔ DONE"
-}
-
-@test "rename_html_directory: should fail, because existing vx.x.x folder is not a directory" {
-  # Set up
-  test() {
-    return 1
-  }
-
-  # Run
-  run rename_html_directory
-
-  # Assert
-  assert_failure 10
-  assert_line "Renaming '$GEN_TARGET/html/' to '$GEN_TARGET/v$PRJ_VERSION/'... ✖ FAILED"
-  assert_line "Could not delete '$GEN_TARGET/v$PRJ_VERSION'!"
+  assert_line "Renaming '$GEN_TARGET/html/' to '$GEN_TARGET/v$PRJ_VERSION/'... ✔ DONE"
 }
 
 @test "rename_html_directory: should fail to remove an existing project folder" {
@@ -629,7 +631,11 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
     return 0
   }
   rm() {
-    return 1
+    if [[ $2 =~ bats\.[0-9]*\.out$ ]]; then
+      command rm $1 $2
+    else
+      return 1
+    fi
   }
 
   # Run
