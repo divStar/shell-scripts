@@ -1,5 +1,6 @@
 variables:
   TEST_RESULTS_FILE: test-results.xml
+  CI_REGISTRY_ENV: registry.env
 
 # Define is_tag rule
 .is_tag: &is_tag
