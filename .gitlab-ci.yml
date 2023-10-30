@@ -24,8 +24,6 @@ variables:
 # Define use_registry template
 .use_registry: &use_registry
   stage: prepare
-  rules:
-    - <<: *is_tag
   artifacts:
     untracked: true
     reports:
@@ -56,6 +54,7 @@ bats_tests:
 tag_from_master:
   <<: *use_registry
   rules:
+    - <<: *is_tag
     - <<: *from_master
   script:
     - echo "TAG_VERSION=$CI_COMMIT_TAG" > $CI_REGISTRY_ENV
@@ -64,6 +63,7 @@ tag_from_master:
 tag_from_develop:
   <<: *use_registry
   rules:
+    - <<: *is_tag
     - <<: *from_develop
   script:
     - echo "TAG_VERSION=${CI_COMMIT_TAG}-SNAPSHOT" > $CI_REGISTRY_ENV
@@ -72,6 +72,7 @@ tag_from_develop:
 tag_from_other:
   <<: *use_registry
   rules:
+    - <<: *is_tag
     - <<: *neither_from_master_nor_develop
   script:
     - echo "TAG_VERSION=${CI_COMMIT_TAG}-BETA" > $CI_REGISTRY_ENV
