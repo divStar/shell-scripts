@@ -2,6 +2,11 @@ variables:
   TEST_RESULTS_FILE: test-results.xml
   CI_REGISTRY_ENV: registry.env
 
+# Define skip_ci_publish rule
+.skip_if_no_publish: &skip_if_no_publish
+  if: '$CI_COMMIT_MESSAGE =~ /\[NO-CI-PUBLISH\]/'
+  when: never
+
 # Define is_tag rule
 .is_tag: &is_tag
   if: '$CI_COMMIT_TAG'
@@ -55,6 +60,7 @@ bats_tests:
 tag_from_master:
   <<: *use_registry
   rules:
+    - <<: *skip_if_no_publish
     - <<: *is_tag_from_master
   script:
     - echo "TAG_VERSION=$CI_COMMIT_TAG" > $CI_REGISTRY_ENV
@@ -63,6 +69,7 @@ tag_from_master:
 tag_from_develop:
   <<: *use_registry
   rules:
+    - <<: *skip_if_no_publish
     - <<: *is_tag_from_develop
   script:
     - echo "TAG_VERSION=${CI_COMMIT_TAG}-SNAPSHOT" > $CI_REGISTRY_ENV
@@ -71,6 +78,7 @@ tag_from_develop:
 tag_from_other:
   <<: *use_registry
   rules:
+    - <<: *skip_if_no_publish
     - <<: *is_tag_neither_from_master_nor_develop
   script:
     - echo "TAG_VERSION=${CI_COMMIT_TAG}-BETA" > $CI_REGISTRY_ENV
@@ -79,6 +87,7 @@ tag_from_other:
 publish_tag:
   stage: publish
   rules:
+    - <<: *skip_if_no_publish
     - <<: *is_tag
   image:
     name: alpine/git:latest
@@ -93,9 +102,7 @@ publish_tag:
       if git rev-parse ${TAG_VERSION} >/dev/null 2>&1 || git ls-remote --tags origin ${TAG_VERSION} | grep -q ${TAG_VERSION}; then
         # If TAG_VERSION exists, delete the original tag that triggered this job
         git tag -d $CI_COMMIT_TAG || true  # Delete the basic tag locally, continue if it doesn't exist locally
-        git tag -d $TAG_VERSION || true  # Delete the anticipated tag locally, continue if it doesn't exist locally
         git push origin :refs/tags/$CI_COMMIT_TAG  # Delete the basic tag on the remote
-        git push origin :refs/tags/$TAG_VERSION  # Delete the anticipated tag on the remote
         echo "Error: Tag ${TAG_VERSION} already exists. The original tag $CI_COMMIT_TAG has been deleted."
         exit 1
       fi
