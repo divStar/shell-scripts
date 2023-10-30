@@ -24,6 +24,8 @@ variables:
 # Define use_registry template
 .use_registry: &use_registry
   stage: prepare
+  rules:
+    - <<: *is_tag
   artifacts:
     untracked: true
     reports:
