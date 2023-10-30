@@ -91,7 +91,7 @@ publish_tag:
     - git show-ref --verify --quiet refs/heads/temp-branch && git branch -D temp-branch || true
     - git checkout -b temp-branch
     - |
-      for script in "scripts/*.sh"; do
+      for script in scripts/*.sh; do
         sed -i -E "s/(export SCRIPT_VERSION=\")([^\"]+)(\".*)/\1${TAG_VERSION}\3/" "$script"
       done
     - git add scripts/*.sh
