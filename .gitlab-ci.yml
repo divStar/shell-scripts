@@ -2,11 +2,6 @@ variables:
   TEST_RESULTS_FILE: test-results.xml
   CI_REGISTRY_ENV: registry.env
 
-# Define skip_ci_publish rule
-.skip_if_no_publish: &skip_if_no_publish
-  if: '$CI_COMMIT_MESSAGE =~ /\[NO-CI-PUBLISH\]/'
-  when: never
-
 # Define is_tag rule
 .is_tag: &is_tag
   if: '$CI_COMMIT_TAG'
@@ -60,7 +55,6 @@ bats_tests:
 tag_from_master:
   <<: *use_registry
   rules:
-    - <<: *skip_if_no_publish
     - <<: *is_tag_from_master
   script:
     - echo "TAG_VERSION=$CI_COMMIT_TAG" > $CI_REGISTRY_ENV
@@ -69,7 +63,6 @@ tag_from_master:
 tag_from_develop:
   <<: *use_registry
   rules:
-    - <<: *skip_if_no_publish
     - <<: *is_tag_from_develop
   script:
     - echo "TAG_VERSION=${CI_COMMIT_TAG}-SNAPSHOT" > $CI_REGISTRY_ENV
@@ -78,7 +71,6 @@ tag_from_develop:
 tag_from_other:
   <<: *use_registry
   rules:
-    - <<: *skip_if_no_publish
     - <<: *is_tag_neither_from_master_nor_develop
   script:
     - echo "TAG_VERSION=${CI_COMMIT_TAG}-BETA" > $CI_REGISTRY_ENV
@@ -87,7 +79,6 @@ tag_from_other:
 publish_tag:
   stage: publish
   rules:
-    - <<: *skip_if_no_publish
     - <<: *is_tag
   image:
     name: alpine/git:latest
@@ -113,9 +104,9 @@ publish_tag:
         sed -i -E "s/(export SCRIPT_VERSION=\")([^\"]+)(\".*)/\1${TAG_VERSION}\3/" "$script"
       done
     - git add scripts/*.sh
-    - git commit -m "Application version '${TAG_VERSION}'"
-    - git tag -a ${TAG_VERSION} -m "Tagging version ${TAG_VERSION}"
+    - git commit -m "Application version '${TAG_VERSION}' [ci skip]"
+    - git tag -a ${TAG_VERSION} -m "Tagging version ${TAG_VERSION} [ci skip]"
     - git push origin ${TAG_VERSION}
-    - git checkout master
+    - git checkout -b master origin/master
     - git branch -D temp-branch
     - git push origin --delete temp-branch
