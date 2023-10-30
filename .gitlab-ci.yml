@@ -88,6 +88,7 @@ publish_tag:
     - git config user.name "$CI_USER"
     - git config user.email "$CI_USER_EMAIL"
     - git remote set-url origin "https://${CI_USER}:${CI_USER_TOKEN}@gitlab.com/${CI_PROJECT_PATH}.git"
+    - git show-ref --verify --quiet refs/heads/temp-branch && git branch -D temp-branch || true
     - git checkout -b temp-branch
     - for script in "scripts/*.sh"; do
         sed -i -E "s/(export SCRIPT_VERSION=\")([^\"]+)(\".*)/\1${TAG_VERSION}\3/" "$script"
