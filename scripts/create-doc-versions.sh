@@ -1,6 +1,6 @@
 #!/bin/bash
 export SCRIPT_NAME="create-docs-versions.sh" # Script name
-export SCRIPT_VERSION="1.0.0"                # Script version
+export SCRIPT_VERSION="unset"                # Script version
 
 # create-docs-versions.sh
 #

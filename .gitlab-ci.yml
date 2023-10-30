@@ -31,14 +31,15 @@ publish_tag:
   stage: publish
   rules:
     - <<: *rules_for_tags
-  image: alpine/git:latest
+  image:
+    name: alpine/git:latest
+    entrypoint: [ "" ]
   script:
     - git config user.name "$CI_USER"
     - git config user.email "$CI_USER_EMAIL"
     - git remote set-url origin "https://${CI_USER}:${CI_USER_TOKEN}@gitlab.com/${CI_PROJECT_PATH}.git"
     - git checkout -b temp-branch
-    - |
-      if [ "$CI_COMMIT_REF_NAME" = "master" ]; then
+    - if [ "$CI_COMMIT_REF_NAME" = "master" ]; then
         TAG_VERSION="${CI_COMMIT_TAG}"
       elfi [ "$CI_COMMIT_REF_NAME" = "develop" ]; then
         TAG_VERSION="${CI_COMMIT_TAG}-SNAPSHOT"
@@ -46,7 +47,7 @@ publish_tag:
         TAG_VERSION="${CI_COMMIT_TAG}-BETA"
       fi
     - for script in "scripts/*.sh"; do
-      sed -i "s/SCRIPT_VERSION=.*/SCRIPT_VERSION=${TAG_VERSION}/" "$script"
+        sed -i -E "s/(export SCRIPT_VERSION=\")([^\"]+)(\".*)/\1${TAG_VERSION}\3/" "$script"
       done
     - git add scripts/*.sh
     - git commit -m "Application version '${TAG_VERSION}'"
