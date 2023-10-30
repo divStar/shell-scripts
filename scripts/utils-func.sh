@@ -1,6 +1,6 @@
 #!/bin/bash
 export SCRIPT_NAME="utils-func.sh" # Script name
-export SCRIPT_VERSION="unset"      # Script version
+export SCRIPT_VERSION="v1.0.1-BETA"      # Script version
 
 # utils-func.sh
 #
