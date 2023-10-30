@@ -1,9 +1,17 @@
-stages:
-  - test
-
 variables:
   TEST_RESULTS_FILE: test-results.xml
 
+# Define rules for tags
+.rules_for_tags: &rules_for_tags
+  if: '$CI_COMMIT_TAG'
+  when: always
+
+# Define stages
+stages:
+  - test
+  - publish
+
+# Run BATS tests (always)
 bats_tests:
   stage: test
   image:
@@ -17,3 +25,32 @@ bats_tests:
       - $PWD/$TEST_RESULTS_FILE
     reports:
       junit: $PWD/$TEST_RESULTS_FILE
+
+# Publish tag (only if tag is being created)
+publish_tag:
+  stage: publish
+  rules:
+    - <<: *rules_for_tags
+  script:
+    - git config user.name "$CI_USER"
+    - git config user.email "$CI_USER_EMAIL"
+    - git remote set-url origin "https://${CI_USER}:${CI_USER_TOKEN}@gitlab.com/${CI_PROJECT_PATH}.git"
+    - git checkout -b temp-branch
+    - |
+      if [ "$CI_COMMIT_REF_NAME" = "master" ]; then
+        TAG_VERSION="${CI_COMMIT_TAG}"
+      elfi [ "$CI_COMMIT_REF_NAME" = "develop" ]; then
+        TAG_VERSION="${CI_COMMIT_TAG}-SNAPSHOT"
+      else
+        TAG_VERSION="${CI_COMMIT_TAG}-BETA"
+      fi
+    - for script in "scripts/*.sh"; do
+      sed -i "s/SCRIPT_VERSION=.*/SCRIPT_VERSION=${TAG_VERSION}/" "$script"
+      done
+    - git add scripts/*.sh
+    - git commit -m "Application version '${TAG_VERSION}'"
+    - git tag -a ${TAG_VERSION} -m "Tagging version ${TAG_VERSION}"
+    - git push origin ${TAG_VERSION}
+    - git checkout master
+    - git branch -D temp-branch
+    - git push origin --delete temp-branch

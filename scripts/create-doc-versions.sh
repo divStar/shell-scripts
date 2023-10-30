@@ -1,4 +1,7 @@
 #!/bin/bash
+export SCRIPT_NAME="create-docs-versions.sh" # Script name
+export SCRIPT_VERSION="1.0.0"                # Script version
+
 # create-docs-versions.sh
 #
 # This script creates the `docs-versions.json` for a given folder (e.g. `./public`).
@@ -22,10 +25,8 @@ source "$script_dir/logging-func.sh"
 source "$script_dir/utils-func.sh"
 
 # Definitions
-export SCRIPT_NAME="create-docs-versions.sh" # Script name
-export SCRIPT_VERSION="1.0.0"                # Script version
-SEMVER_REGEX="^v[0-9]+\.[0-9]+\.[0-9]+$"     # Regular expression to determine version tags
-DOC_VERSIONS_JSON="doc-versions.json"        # File to output
+SEMVER_REGEX="^v[0-9]+\.[0-9]+\.[0-9]+$" # Regular expression to determine version tags
+DOC_VERSIONS_JSON="doc-versions.json"    # File to output
 
 # Configurable global variables
 public_directory=./ # script-relative path to the public directory
