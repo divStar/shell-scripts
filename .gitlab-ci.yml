@@ -31,6 +31,7 @@ publish_tag:
   stage: publish
   rules:
     - <<: *rules_for_tags
+  image: alpine/git:latest
   script:
     - git config user.name "$CI_USER"
     - git config user.email "$CI_USER_EMAIL"
