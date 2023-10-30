@@ -107,6 +107,7 @@ publish_tag:
     - git commit -m "Application version '${TAG_VERSION}' [ci skip]"
     - git tag -a ${TAG_VERSION} -m "Tagging version ${TAG_VERSION} [ci skip]"
     - git push origin ${TAG_VERSION}
+    - git fetch
     - git checkout -b master origin/master
     - git branch -D temp-branch
     - git push origin --delete temp-branch
