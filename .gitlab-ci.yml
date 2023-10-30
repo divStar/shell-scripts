@@ -7,18 +7,18 @@ variables:
   when: always
 
 # Define from_master rule
-.from_master: &from_master
-  if: '$CI_COMMIT_REF_NAME == "master"'
+.is_tag_from_master: &is_tag_from_master
+  if: '$CI_COMMIT_TAG && $CI_COMMIT_REF_NAME == "master"'
   when: always
 
 # Define from_develop rule
-.from_develop: &from_develop
-  if: '$CI_COMMIT_REF_NAME == "develop"'
+.is_tag_from_develop: &is_tag_from_develop
+  if: '$CI_COMMIT_TAG && $CI_COMMIT_REF_NAME == "develop"'
   when: always
 
 # Define from_other rule
-.neither_from_master_nor_develop: &neither_from_master_nor_develop
-  if: '$CI_COMMIT_REF_NAME != "master" && $CI_COMMIT_REF_NAME != "develop"'
+.is_tag_neither_from_master_nor_develop: &is_tag_neither_from_master_nor_develop
+  if: '$CI_COMMIT_TAG && $CI_COMMIT_REF_NAME != "master" && $CI_COMMIT_REF_NAME != "develop"'
   when: always
 
 # Define use_registry template
@@ -54,8 +54,7 @@ bats_tests:
 tag_from_master:
   <<: *use_registry
   rules:
-    - <<: *is_tag
-    - <<: *from_master
+    - <<: *is_tag_from_master
   script:
     - echo "TAG_VERSION=$CI_COMMIT_TAG" > $CI_REGISTRY_ENV
 
@@ -63,8 +62,7 @@ tag_from_master:
 tag_from_develop:
   <<: *use_registry
   rules:
-    - <<: *is_tag
-    - <<: *from_develop
+    - <<: *is_tag_from_develop
   script:
     - echo "TAG_VERSION=${CI_COMMIT_TAG}-SNAPSHOT" > $CI_REGISTRY_ENV
 
@@ -72,8 +70,7 @@ tag_from_develop:
 tag_from_other:
   <<: *use_registry
   rules:
-    - <<: *is_tag
-    - <<: *neither_from_master_nor_develop
+    - <<: *is_tag_neither_from_master_nor_develop
   script:
     - echo "TAG_VERSION=${CI_COMMIT_TAG}-BETA" > $CI_REGISTRY_ENV
 
