@@ -109,4 +109,14 @@ publish_tag:
     - git push origin ${TAG_VERSION} # Push anticipated tag to remote
     - git tag -d $CI_COMMIT_TAG || true  # Delete the basic tag locally after adding the anticipated tag
     - git push origin :refs/tags/$CI_COMMIT_TAG  # Delete the basic tag on the remote, too
+    - git fetch
+    - |
+      if git rev-parse --verify master >/dev/null 2>&1; then
+        # If master branch exists locally
+        git checkout master
+        git reset --hard origin/master  # Reset the local master branch to match origin/master
+      else
+        # If master branch does not exist locally
+        git checkout -b master origin/master  # Create master branch based on origin/master
+      fi
     - git branch -D temp-branch
