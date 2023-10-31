@@ -117,6 +117,7 @@ publish_tag:
     - git push origin ${TAG_VERSION} # Push anticipated tag to remote
     # Fetch all branches, change to master and delete the temporary branch
     - git fetch
+    - printenv
     - |
       if git rev-parse --verify $CI_COMMIT_REF_NAME >/dev/null 2>&1; then
         # If the branch exists locally
