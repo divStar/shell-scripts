@@ -84,12 +84,15 @@ publish_tag:
     name: alpine/git:latest
     entrypoint: [ "" ]
   script:
+    # Check precondition
     - "if [ ! -f $CI_REGISTRY_ENV ]; then echo \"Error: $CI_REGISTRY_ENV artifact is missing! Re-run the 'prepare' stage!\"; exit 1; fi"
+    # Set git user
     - git config user.name "$CI_USER"
     - git config user.email "$CI_USER_EMAIL"
+    # Set remote
     - git remote set-url origin "https://${CI_USER}:${CI_USER_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+    # Check if the designated TAG_VERSION(+suffix) tag already exists locally or on the remote
     - |
-      # Check if the designated TAG_VERSION(+suffix) tag already exists locally or on the remote
       if git rev-parse ${TAG_VERSION} >/dev/null 2>&1 || git ls-remote --tags origin ${TAG_VERSION} | grep -q ${TAG_VERSION}; then
         # If TAG_VERSION exists, delete the original tag that triggered this job
         git tag -d $CI_COMMIT_TAG || true  # Delete the basic tag locally, continue if it doesn't exist locally
@@ -97,26 +100,30 @@ publish_tag:
         echo "Error: Tag ${TAG_VERSION} already exists. The original tag $CI_COMMIT_TAG has been deleted."
         exit 1
       fi
+    # Create temporary branch; this is necessary to replace SCRIPT_VERSION with the tag and commit it
     - git show-ref --verify --quiet refs/heads/temp-branch && git branch -D temp-branch || true
     - git checkout -b temp-branch
+    # Replace SCRIPT_VERSION with $TAG_VERSION
     - |
       for script in scripts/*.sh; do
         sed -i -E "s/(export SCRIPT_VERSION=\")([^\"]+)(\".*)/\1${TAG_VERSION}\3/" "$script"
       done
+    # Add and commit the changes, remove the basic tag ($CI_COMMIT_TAG) and create the anticipated tag ($TAG_VERSION)
     - git add scripts/*.sh
     - git commit -m "Application version '${TAG_VERSION}' [ci skip]"
+    - git tag -d $CI_COMMIT_TAG || true  # Delete the basic tag locally
+    - git push origin :refs/tags/$CI_COMMIT_TAG  # Delete the basic tag on the remote, too
     - git tag -a ${TAG_VERSION} -m "Tagging version ${TAG_VERSION} [ci skip]" # Create anticipated tag locally
     - git push origin ${TAG_VERSION} # Push anticipated tag to remote
-    - git tag -d $CI_COMMIT_TAG || true  # Delete the basic tag locally after adding the anticipated tag
-    - git push origin :refs/tags/$CI_COMMIT_TAG  # Delete the basic tag on the remote, too
+    # Fetch all branches, change to master and delete the temporary branch
     - git fetch
     - |
-      if git rev-parse --verify master >/dev/null 2>&1; then
-        # If master branch exists locally
-        git checkout master
-        git reset --hard origin/master  # Reset the local master branch to match origin/master
+      if git rev-parse --verify $CI_COMMIT_REF_NAME >/dev/null 2>&1; then
+        # If the branch exists locally
+        git checkout $CI_COMMIT_REF_NAME
+        git reset --hard origin/$CI_COMMIT_REF_NAME  # Reset the local branch to match origin/branch
       else
-        # If master branch does not exist locally
-        git checkout -b master origin/master  # Create master branch based on origin/master
+        # If the branch does not exist locally
+        git checkout -b $CI_COMMIT_REF_NAME origin/$CI_COMMIT_REF_NAME  # Create branch based on origin/branch
       fi
     - git branch -D temp-branch
