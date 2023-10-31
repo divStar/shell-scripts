@@ -1,6 +1,6 @@
 #!/bin/bash
 export SCRIPT_NAME="logging-func.sh" # Script name
-export SCRIPT_VERSION="unset"        # Script version
+export SCRIPT_VERSION="v1.0.8-BETA"        # Script version
 
 # logging-func.sh
 #
