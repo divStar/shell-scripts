@@ -117,14 +117,13 @@ publish_tag:
     - git push origin ${TAG_VERSION} # Push anticipated tag to remote
     # Fetch all branches, change to master and delete the temporary branch
     - git fetch
-    - printenv
     - |
-      if git rev-parse --verify $CI_COMMIT_REF_NAME >/dev/null 2>&1; then
+      if git rev-parse --verify $CI_DEFAULT_BRANCH >/dev/null 2>&1; then
         # If the branch exists locally
-        git checkout $CI_COMMIT_REF_NAME
-        git reset --hard origin/$CI_COMMIT_REF_NAME  # Reset the local branch to match origin/branch
+        git checkout $CI_DEFAULT_BRANCH
+        git reset --hard origin/$CI_DEFAULT_BRANCH  # Reset the local branch to match origin/branch
       else
         # If the branch does not exist locally
-        git checkout -b $CI_COMMIT_REF_NAME origin/$CI_COMMIT_REF_NAME  # Create branch based on origin/branch
+        git checkout -b $CI_DEFAULT_BRANCH origin/$CI_DEFAULT_BRANCH  # Create branch based on origin/branch
       fi
     - git branch -D temp-branch
