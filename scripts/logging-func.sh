@@ -1,4 +1,7 @@
 #!/bin/bash
+export SCRIPT_NAME="logging-func.sh" # Script name
+export SCRIPT_VERSION="unset"        # Script version
+
 # logging-func.sh
 #
 # This script contains logging-related functions.
@@ -13,43 +16,56 @@
 #   - source it or include it in your script
 #   - use the provided functions
 
-# Definitions
-SCRIPT_NAME="logging-func.sh" # Script name
-SCRIPT_VERSION="1.0.0"        # Script version
-
 # Determine if we have a Terminal capable of at least 8 colors
 if [ -t 1 ] && [ "$(tput colors)" -ge 8 ]; then
   ERROR_COLOR="\033[31m"
   SUCCESS_COLOR="\033[32m"
-  RETRIEVED_VALUE_COLOR="\033[34m"
+  HIGHLIGHT_COLOR="\033[34m"
   RESET="\033[0m"
 fi
 
 # Functions
+
+# Logs a given string to STDOUT.
+# Parameters:
+#   $1 -  string to log
 log_info() {
   printf "%s" "$*"
 }
 
+# Logs a given string to STDOUT and STDERR using $ERROR_COLOR color if available.
+# Parameters:
+#   $1 -  string to log
 log_error() {
   printf "$ERROR_COLOR%s$RESET" "$*" >&2
 }
 
+# Logs a given string to STDOUT using $SUCCESS_COLOR if available.
+# Parameters:
+#   $1 -  string to log
 log_success() {
   printf "$SUCCESS_COLOR%s$RESET" "$*"
 }
 
+# Logs a given string to STDOUT using $HIGHLIGHT_COLOR if available.
+# Parameters:
+#   $1 -  string to log
 log_highlight() {
-  printf "$RETRIEVED_VALUE_COLOR%s$RESET" "$*"
+  printf "$HIGHLIGHT_COLOR%s$RESET" "$*"
 }
 
+# Logs a newline (\n) to STDOUT.
+# Parameters: none.
 log_newline() {
   printf "\n"
 }
 
+# Logs the application header to STDOUT. See function itself for template.
+# Parameters: none.
 log_application_header() {
   local total_length
   local dashes
   total_length=$((${#SCRIPT_NAME} + ${#SCRIPT_VERSION} + 3))
   dashes=$(printf '%0.s-' $(seq 1 $total_length))
-  printf "%s - $RETRIEVED_VALUE_COLOR%s$RESET\n%s\n" "$SCRIPT_NAME" "$SCRIPT_VERSION" "$dashes"
+  printf "%s - $HIGHLIGHT_COLOR%s$RESET\n%s\n" "$SCRIPT_NAME" "$SCRIPT_VERSION" "$dashes"
 }

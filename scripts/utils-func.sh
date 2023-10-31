@@ -1,4 +1,7 @@
 #!/bin/bash
+export SCRIPT_NAME="utils-func.sh" # Script name
+export SCRIPT_VERSION="unset"      # Script version
+
 # utils-func.sh
 #
 # This script contains utility functions.
@@ -16,10 +19,6 @@
 # Determine current path and source the libraries
 script_dir=$(dirname "${BASH_SOURCE[0]}")
 source "$script_dir/logging-func.sh"
-
-# Definitions
-SCRIPT_NAME="utils-func.sh" # Script name
-SCRIPT_VERSION="1.0.0"      # Script version
 
 # Checks whether a given command exists.
 # Parameters:

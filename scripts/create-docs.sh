@@ -1,4 +1,7 @@
 #!/bin/bash
+export SCRIPT_NAME="create-docs.sh" # Script name
+export SCRIPT_VERSION="unset"       # Script version
+
 # create-docs.sh
 #
 # This script creates the documentation for a PlatformIO project using Doxygen.
@@ -35,8 +38,6 @@ PLATFORMIO_INI_SOURCE="platformio.ini" # another source for metadata
 # also: ./src and ./include, since these folders are the sources
 
 # Definitions
-SCRIPT_NAME="create-docs.sh"                       # Script name
-SCRIPT_VERSION="1.0.1"                             # Script version
 DOXY_CONFIG="./doxy-config"                        # configuration folder containing various Doxygen-related files
 DOXY_FILE="Doxyfile"                               # Doxygen configuration custom_file
 DOXY_HEADER_TEMPLATE="doxy-header-template.html"   # Doxygen HTML header template

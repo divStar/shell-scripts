@@ -19,40 +19,52 @@ setup() {
 }
 
 @test "log_error: should log 'test' to STDERR" {
+  ERROR_COLOR="[EC]"
+  RESET="[R]"
   run log_error "test"
   # Note: it's not tested, that `log_error` outputs to STDERR
   assert_success
-  assert_output "test"
+  assert_output "[EC]test[R]"
 }
 
 @test "log_error: should log nothing" {
+  ERROR_COLOR="[EC]"
+  RESET="[R]"
   run log_error
   assert_success
-  assert_output ""
+  assert_output "[EC][R]"
 }
 
 @test "log_success: should log 'test'" {
+  SUCCESS_COLOR="[SC]"
+  RESET="[R]"
   run log_success "test"
   assert_success
-  assert_output "test"
+  assert_output "[SC]test[R]"
 }
 
 @test "log_success: should log nothing" {
+  SUCCESS_COLOR="[SC]"
+  RESET="[R]"
   run log_success
   assert_success
-  assert_output ""
+  assert_output "[SC][R]"
 }
 
 @test "log_highlight: should log 'test'" {
+  HIGHLIGHT_COLOR="[HC]"
+  RESET="[R]"
   run log_highlight "test"
   assert_success
-  assert_output "test"
+  assert_output "[HC]test[R]"
 }
 
 @test "log_highlight: should log nothing" {
+  HIGHLIGHT_COLOR="[HC]"
+  RESET="[R]"
   run log_highlight
   assert_success
-  assert_output ""
+  assert_output "[HC][R]"
 }
 
 @test "log_newline: should log a newline character" {
