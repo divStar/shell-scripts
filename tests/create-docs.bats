@@ -1,43 +1,51 @@
 #!/usr/bin/bats
-# Mock doxygen command
-envsubst() {
-  return 0
-}
-yq() {
-  return 0
-}
-doxygen() {
-  if [[ $1 == "success_config/doxyfile" ]] || [[ $1 == "./Doxyfile" ]]; then
-    # Simulate success
-    return 0
-  else
-    # Simulate failure
-    return 1
-  fi
-}
-
-cp() {
-  if [[ $1 == "non-existing-file/*" ]]; then
-    # Simulate failure
-    return 1
-  else
-    # Simulate success
-    return 0
-  fi
-}
-
-# Mock log functions to output received text
-log_info() { printf "%s" "$1"; }
-log_highlight() { printf "%s" "$1"; }
-log_success() { printf "%s" "$1"; }
-log_error() { printf "%s" "$1"; }
-log_newline() { printf "\n"; }
-
+# shellcheck disable=2317
 setup() {
   bats_require_minimum_version 1.10.0
   bats_load_library bats-support
   bats_load_library bats-assert
   load '../scripts/create-docs.sh'
+
+  envsubst() {
+    return 0
+  }
+  yq() {
+    return 0
+  }
+  doxygen() {
+    if [[ $1 == "success_config/doxyfile" ]] || [[ $1 == "./Doxyfile" ]]; then
+      # Simulate success
+      return 0
+    else
+      # Simulate failure
+      return 1
+    fi
+  }
+
+  cp() {
+    if [[ $1 == "non-existing-file/*" ]]; then
+      # Simulate failure
+      return 1
+    else
+      # Simulate success
+      return 0
+    fi
+  }
+
+  log_info() { printf "%s" "$1"; }
+
+  log_highlight() { printf "%s" "$1"; }
+
+  log_success() { printf "%s" "$1"; }
+
+  log_error() { printf "%s" "$1"; }
+
+  log_newline() { printf "\n"; }
+}
+
+teardown() {
+  # Unset mocks after all tests have been executed
+  unset -f envsubst yq doxygen cp log_info log_highlight log_success log_error log_newline
 }
 
 @test "find_metadata_source: should find a library.json successfully" {
@@ -160,6 +168,8 @@ setup() {
   assert_equal "${metadata_values[*]}" "${expected_metadata_values[*]}"
 
   rm "$LIBRARY_JSON_SOURCE"
+
+  unset -f yq
 }
 
 @test "get_metadata: should retrieve metadata from 'platformio.ini' successfully" {
@@ -207,6 +217,8 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
   assert_equal "${metadata_values[*]}" "${expected_metadata_values[*]}"
 
   rm "$PLATFORMIO_INI_SOURCE"
+
+  unset -f yq
 }
 
 @test "get_metadata: should fail to retrieve metadata, because there is no source" {
@@ -309,6 +321,8 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
   rm "$DOXY_CONFIG/$DOXY_HEADER"
   rm "$DOXY_CONFIG/$DOXY_FOOTER"
   rm "$DOXY_CONFIG/$DOXY_STYLESHEET"
+
+  unset -f envsubst
 }
 
 @test "preprocess_templates: should process templates successfully even with empty metadata_values" {
@@ -376,6 +390,8 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
   rm "$DOXY_CONFIG/$DOXY_HEADER"
   rm "$DOXY_CONFIG/$DOXY_FOOTER"
   rm "$DOXY_CONFIG/$DOXY_STYLESHEET"
+
+  unset -f envsubst
 }
 
 @test "preprocess_templates: should fail, because header-template is absent" {
@@ -520,6 +536,8 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
   # Assert
   assert_success
   assert_output "Deleting templated files... ✔ DONE"
+
+  unset -f rm
 }
 
 @test "delete_generated_template_files: should fail to delete the DOXY_HEADER" {
@@ -542,6 +560,8 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
   assert_failure 9
   assert_line "Deleting templated files... ✖ FAILED"
   assert_line "Could not delete generated file '$DOXY_CONFIG/$DOXY_HEADER'!"
+
+  unset -f rm
 }
 
 @test "delete_generated_template_files: should fail to delete DOXY_FOOTER" {
@@ -564,6 +584,8 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
   assert_failure 9
   assert_line "Deleting templated files... ✖ FAILED"
   assert_line "Could not delete generated file '$DOXY_CONFIG/$DOXY_FOOTER'!"
+
+  unset -f rm
 }
 
 @test "delete_generated_template_files: should fail to delete DOXY_STYLESHEET" {
@@ -586,6 +608,8 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
   assert_failure 9
   assert_line "Deleting templated files... ✖ FAILED"
   assert_line "Could not delete generated file '$DOXY_CONFIG/$DOXY_STYLESHEET'!"
+
+  unset -f rm
 }
 
 @test "rename_html_directory: should rename the generated docs folder successfully" {
@@ -603,6 +627,9 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
   # Assert
   assert_success
   assert_output "Renaming '$GEN_TARGET/html/' to '$GEN_TARGET/v$PRJ_VERSION/'... ✔ DONE"
+
+  # Cleanup
+  unset -f test mv
 }
 
 @test "rename_html_directory: should rename the generated docs even though the directory exists" {
@@ -623,6 +650,8 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
   # Assert
   assert_success
   assert_line "Renaming '$GEN_TARGET/html/' to '$GEN_TARGET/v$PRJ_VERSION/'... ✔ DONE"
+
+  unset -f test rm mv
 }
 
 @test "rename_html_directory: should fail to remove an existing project folder" {
@@ -631,11 +660,7 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
     return 0
   }
   rm() {
-    if [[ $2 =~ bats\.[0-9]*\.out$ ]]; then
-      command rm $1 $2
-    else
-      return 1
-    fi
+    return 1
   }
 
   # Run
@@ -645,6 +670,9 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
   assert_failure 10
   assert_line "Renaming '$GEN_TARGET/html/' to '$GEN_TARGET/v$PRJ_VERSION/'... ✖ FAILED"
   assert_line "Could not delete '$GEN_TARGET/v$PRJ_VERSION'!"
+
+  # Cleanup
+  unset -f test rm
 }
 
 @test "rename_html_directory: should fail to move the new folder into its place" {
@@ -666,6 +694,9 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
   assert_failure 11
   assert_line "Renaming '$GEN_TARGET/html/' to '$GEN_TARGET/v$PRJ_VERSION/'... ✖ FAILED"
   assert_line "Could not move '$GEN_TARGET/html' to '$GEN_TARGET/v$PRJ_VERSION'!"
+
+  # Cleanup
+  unset -f test rm mv
 }
 
 @test "main: should successfully generate docs" {
@@ -751,4 +782,6 @@ board = zeroUSB' >"$PLATFORMIO_INI_SOURCE"
   rm "$DOXY_CONFIG/$DOXY_HEADER_TEMPLATE"
   rm "$DOXY_CONFIG/$DOXY_FOOTER_TEMPLATE"
   rm "$DOXY_CONFIG/$DOXY_STYLESHEET_TEMPLATE"
+
+  unset -f test mv yq
 }

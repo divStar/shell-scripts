@@ -1,13 +1,14 @@
 #!/usr/bin/bats
-yq() {
-  return 0
-}
-
 setup() {
   bats_require_minimum_version 1.10.0
   bats_load_library bats-support
   bats_load_library bats-assert
   load '../scripts/create-doc-versions.sh'
+
+  #shellcheck disable=2317
+  yq() {
+    return 0
+  }
 
   versions=("develop" "master" "v1.0.0" "v1.0.2" "v2.0.1" "v1.0rc3" "feature-some-stuff")
   versions_json='[
@@ -88,7 +89,7 @@ setup() {
   # Given
   # Mock
   yq() {
-    echo $(( $(cat "$yq_counter_file") + 1 )) >"$yq_counter_file"
+    echo $(($(cat "$yq_counter_file") + 1)) >"$yq_counter_file"
     echo "$(cat) $version_name"
     return 0
   }
@@ -106,16 +107,15 @@ setup() {
 
   # Cleanup
   rm "$yq_counter_file"
+  unset -f yq
 }
 
 @test "handle_arguments: should handle --public-directory=... properly" {
-  local expected
   handle_arguments --public-directory=test
   assert_equal "$public_directory" "test"
 }
 
 @test "handle_arguments: should handle --no-json-echo properly" {
-  local expected
   handle_arguments --no-json-echo
   assert_equal "$json_echo" "false"
 }
@@ -124,6 +124,7 @@ setup() {
   # Export versions so that they can be used inside the mock function
   export VERSIONS="${versions[*]}"
   # Mock `get_versions_from_directory` function to provide controlled output
+  # shellcheck disable=2317
   get_versions_from_directory() {
     local versions_with_newlines
 
@@ -159,4 +160,7 @@ setup() {
   resultJson=$(echo "$main_output" | tail -n +4 | yq eval -o=json -)
   expectedJson=$(echo "$versions_json" | yq eval -o=json -)
   assert_equal "$resultJson" "$expectedJson"
+
+  # Cleanup
+  unset -f get_versions_from_directory
 }
