@@ -1,6 +1,6 @@
 #!/bin/bash
 export SCRIPT_NAME="download-scripts.sh" # Script name
-export SCRIPT_VERSION="unset"            # Script version
+export SCRIPT_VERSION="v1.0.20"            # Script version
 
 # download-scripts.sh
 #
