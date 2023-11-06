@@ -240,12 +240,16 @@ extract_asset_archive() {
   "tar.bz2")
     tar --strip-components=2 -jxf "$asset_archive_filename.$asset_archive_extension" $scripts_arg
     ;;
+  *)
+    printf "$ERROR_COLOR%s$RESET\n" "Error: unknown asset archive type ('$asset_type')."
+    exit 5
+    ;;
   esac
 
   exit_code=$?
   if [[ exit_code -gt 0 ]]; then
     printf "$ERROR_COLOR%s$RESET\n" "Error: scripts could not be extracted (see actual error above)."
-    exit 5
+    exit 6
   fi
 }
 
