@@ -16,7 +16,8 @@ export SCRIPT_VERSION="unset"            # Script version
 #   2 - Script exits, because no scripts to extract are present
 #   3 - Script exits, because the list of asset archives could not be downloaded
 #   4 - Script exits, because the asset archive could not be downloaded
-#   5 - Script exits, because the desired scripts could not be extracted
+#   5 - Script exits, because an unknown asset_type was passed to the script
+#   6 - Script exits, because the scripts could not be extracted
 #
 # Notes:
 #   1. This script is self-sufficient, because unlike other scripts it does not 'source' any other script
