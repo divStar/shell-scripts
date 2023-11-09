@@ -131,7 +131,7 @@ construct_json() {
 main() {
   handle_arguments "$@"
   log_application_header
-  command_exists "yq"
+  command_exists 'yq'
 
   local -a versions
   local semantic_versions

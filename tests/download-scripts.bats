@@ -6,6 +6,20 @@ setup() {
   load '../scripts/download-scripts.sh'
 }
 
+@test "command_exists: should return true, because the command exists" {
+  some_tool_command() {
+    return 0
+  }
+  run command_exists "some_tool_command"
+  assert_success
+}
+
+@test "command_exists: should return false, because the command does not exist" {
+  run command_exists "some_tool_command"
+  assert_failure
+  assert_output "'some_tool_command' was not found. Aborting!"
+}
+
 @test "shell_scripts_url: should return the full URL successfully" {
   base_url="base-url"
   shell_scripts_project_id=9
@@ -124,14 +138,34 @@ setup() {
 }
 
 @test "handle_arguments: should handle -t / --asset-type properly" {
+  unzip() {
+    return 0
+  }
+  tar() {
+    return 0
+  }
+  export -f unzip tar
+
   declare -a scripts
   scripts+=("dummy.sh")
 
+  handle_arguments -t "zip"
+  assert_equal "$asset_type" "zip"
+  assert_equal "$asset_tool" "unzip"
+
   handle_arguments -t "tar"
   assert_equal "$asset_type" "tar"
+  assert_equal "$asset_tool" "tar"
 
   handle_arguments --asset-type "tar.bz2"
   assert_equal "$asset_type" "tar.bz2"
+  assert_equal "$asset_tool" "tar"
+
+  handle_arguments --asset-type "tar.gz"
+  assert_equal "$asset_type" "tar.gz"
+  assert_equal "$asset_tool" "tar"
+
+  unset -f unzip tar
 }
 
 @test "handle_arguments: should handle -h / --help properly" {

@@ -18,6 +18,8 @@ export SCRIPT_VERSION="unset"            # Script version
 #   4 - Script exits, because the asset archive could not be downloaded
 #   5 - Script exits, because an unknown asset_type was passed to the script
 #   6 - Script exits, because the scripts could not be extracted
+#   7 - Script exits, because the asset tool for the asset_type is unknown
+#   8 - Script exits, because a particular command, that the script uses, is not available
 #
 # Notes:
 #   1. This script is self-sufficient, because unlike other scripts it does not 'source' any other script
@@ -32,6 +34,7 @@ shell_scripts_version=""
 base_url="https://gitlab.my.family"
 private_token="f4Dw3zX2cwhPcfZ61Akf"
 asset_type="zip"
+asset_tool="unzip"
 dashes="---"
 
 declare -a scripts
@@ -50,6 +53,16 @@ shell_scripts_url() {
 
 filter_asset_type_value() {
   echo ".assets.sources[] | select(.format == \"$asset_type\").url"
+}
+
+command_exists() {
+  local command_to_check
+  command_to_check="$1"
+  shift
+  if ! command -v "$command_to_check" >/dev/null 2>&1; then
+    printf "$ERROR_COLOR%s$RESET\n" "'$command_to_check' was not found. Aborting!"
+    exit 8
+  fi
 }
 
 # Logs the application header to STDOUT. See function itself for template.
@@ -95,9 +108,6 @@ EOF
 # Handles script input arguments.
 # Parameters: none.
 # Returns: none.
-# Exit codes:
-#   1 - Script exits, because an unknown argument was given
-#   2 - Script exits, because no scripts to extract are present
 handle_arguments() {
   while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -120,6 +130,25 @@ handle_arguments() {
     -t | --asset-type)
       asset_type="$2"
       shift 1
+
+      case "$asset_type" in
+      "zip")
+        asset_tool="unzip"
+        ;;
+      "tar")
+        asset_tool="tar"
+        ;;
+      "tar.gz")
+        asset_tool="tar"
+        ;;
+      "tar.bz2")
+        asset_tool="tar"
+        ;;
+      *)
+        printf "$ERROR_COLOR%s$RESET\n" "Error: unknown asset_tool for asset_type ('$asset_type')."
+        exit 7
+        ;;
+      esac
       ;;
     -h | --help)
       show_help
@@ -153,8 +182,6 @@ handle_arguments() {
 # Parameters: none.
 # Returns:
 #   the result of `yq eval ...`
-# Exit codes:
-#   3 - Script exits, because the list of asset archives could not be downloaded
 # Notes:
 #   Subsequent functions expect the filtered output of `yq eval ...` if they're executed
 get_asset_archive_url() {
@@ -182,8 +209,6 @@ get_asset_archive_url() {
 # Parameters:
 #   $1 - URL of the asset to download
 # Returns: nothing.
-# Exit codes:
-#   4 - Script exits, because the asset archive could not be downloaded
 # Notes:
 #   1. Function does not return anything, but does download a file
 #   2. Subsequent functions expect the file to be present
@@ -207,8 +232,6 @@ download_asset_archive() {
 #   $1 - filename of the asset archive (without the extension, e.g. 'shell-scripts-v1.0.11')
 #   $2 - extension of the asset archive ($asset_type, one of [zip, tar, tar.gz, tar.bz2], default: zip)
 # Returns: nothing.
-# Exit codes:
-#   5 - Script exits, because the desired scripts could not be extracted
 # Notes:
 #   1. tar.gz or tar.bz2 are the smallest
 #   2. 'unzip' and 'tar' commands are used; these might not work on Windows
@@ -263,7 +286,13 @@ extract_asset_archive() {
 #      should have downloaded all desired scripts or failed doing so with a proper error message
 main() {
   log_application_header
+
   handle_arguments "$@"
+
+  command_exists 'yq'
+  command_exists 'curl'
+  command_exists "$asset_tool"
+
   log_global_variables
 
   printf "%s\n" "$dashes"
